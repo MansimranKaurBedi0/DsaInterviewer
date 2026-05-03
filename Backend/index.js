@@ -39,26 +39,26 @@ function createChat() {
     contents: "arrays",
     config: {
       //idr usko instructions dedi 
-       systemInstruction: `
+      systemInstruction: `
 You are a DSA interviewer.
 
 If user asks for a coding question,
 always use generateQuestion tool.
   `,
-  //idr avavible tools bta diye 
-  tools: [
-    {
-      functionDeclarations: [
-        questionDeclaration
+      //idr avavible tools bta diye 
+      tools: [
+        {
+          functionDeclarations: [
+            questionDeclaration
+          ]
+        }
       ]
-    }
-  ]
     },
     history: [],
   });
 }
-async function main(){
-  const chat=createChat();
+async function main() {
+  const chat = createChat();
   while (true) {
     const userProblem = readlineSync.question("You:");
 
@@ -70,20 +70,23 @@ async function main(){
     const response = await chat.sendMessage({
       message: userProblem,
     });
-   //response handle kr rhe
+    //response handle kr rhe
     if (response.functionCalls && response.functionCalls.length > 0) {
-        const toolCall =response.functionCalls[0];
-  
-  if (toolCall.name ==="generateQuestion") {
-    const result =generateQuestion(toolCall.args);
-    console.log("\nInterview Question:");
-    console.log(result);
-    console.log("Explain your approach to solve this problem.");
-  }} 
-else {console.log( response.text);
-}
+      const toolCall = response.functionCalls[0];
 
-   
+      if (toolCall.name === "generateQuestion") {
+        console.log(toolCall.args);
+        const result = generateQuestion(toolCall.args);
+        console.log("\nInterview Question:");
+        console.log(result);
+        console.log("Explain your approach to solve this problem.");
+      }
+    }
+    else {
+      console.log(response.text);
+    }
+
+
   }
 }
 
