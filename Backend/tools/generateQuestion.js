@@ -10,9 +10,15 @@ function generateQuestion({ topic, difficulty }) {
   ) {
     return "No question found for this topic or difficulty.";
   }
-  const selectedQuestion =
-    questions[topic][difficulty][0];
+  const questionList =
+  questions[topic][difficulty];
 
+const randomIndex = Math.floor(
+  Math.random() * questionList.length
+);
+
+const selectedQuestion =
+  questionList[randomIndex];
   interviewState.topic = topic;
   interviewState.difficulty = difficulty;
   interviewState.currentQuestion =
