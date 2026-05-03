@@ -25,7 +25,7 @@ const selectedQuestion =
     selectedQuestion;
 
   interviewState.totalQuestions += 1;
-
+interviewState.awaitingAnswer = true;
   return selectedQuestion;
 }
 

@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import readlineSync from "readline-sync";
 import generateQuestion from "./tools/generateQuestion.js";
+import interviewState from "./state/interviewState.js";
 dotenv.config();
 
 //ye humne. declaration dede k agr dsa interview k related hoga toh ye tool use kr skte ho and ye ye parameters pass kr dena muje
@@ -61,7 +62,25 @@ async function main() {
   const chat = createChat();
   while (true) {
     const userProblem = readlineSync.question("You:");
+    if (interviewState.awaitingAnswer) {
+      const evaluation = await chat.sendMessage({
+        message: `
+Question: ${JSON.stringify(interviewState.currentQuestion)}
 
+Candidate Answer:
+${userProblem}
+
+Evaluate like a DSA interviewer.
+Give short feedback and ask one follow-up question.
+`
+      });
+
+      console.log("\n" + evaluation.text);
+
+      interviewState.awaitingAnswer = false;
+
+      continue;
+    }
     if (userProblem.toLowerCase() === "exit") {
       console.log("Chat ended.");
       break;
