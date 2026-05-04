@@ -6,6 +6,7 @@ const interviewState = {
   score: 0,
   totalQuestions: 0,
   awaitingAnswer: false
+  ,history: []
 };
 
 export default interviewState;
