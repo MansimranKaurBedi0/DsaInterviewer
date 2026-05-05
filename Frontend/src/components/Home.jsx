@@ -16,7 +16,7 @@ const TOPICS = [
 ];
 
 const Home = () => {
-  const [recommendations, setRecommendations] = useState([]);
+  const [progress, setProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -30,7 +30,7 @@ const Home = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        setRecommendations(response.data.recommendations || []);
+        setProgress(response.data.progress || {});
       } catch (err) {
         console.error('Failed to fetch history', err);
       } finally {
@@ -92,22 +92,40 @@ const Home = () => {
           </motion.div>
         </section>
 
-        {/* Evaluation & Recommendations */}
-        {!loading && recommendations.length > 0 && (
+        {/* Topic Wise Progress */}
+        {!loading && (
           <section>
             <div className="flex items-center gap-3 mb-6">
-              <AlertTriangle className="w-6 h-6 text-orange-400" />
-              <h3 className="text-2xl font-bold">Recommended Topics to Study</h3>
+              <TrendingUp className="w-6 h-6 text-indigo-400" />
+              <h3 className="text-2xl font-bold">Topic Wise Progress</h3>
             </div>
-            <p className="text-gray-400 mb-6">Based on your recent interview feedback, we recommend brushing up on these topics:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {recommendations.map((rec, idx) => (
-                <div key={idx} className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-xl flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                  <span className="font-medium text-orange-200 capitalize">{rec}</span>
-                </div>
-              ))}
-            </div>
+            {Object.keys(progress).length === 0 ? (
+              <p className="text-gray-400 mb-6 bg-white/5 p-4 rounded-xl border border-white/10">Take a mock interview to start tracking your progress here!</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {['arrays', 'two_pointers', 'sliding_window', 'stack', 'binary_search', 'linked_list', 'trees', 'graphs'].map((topicName) => {
+                  const status = progress[topicName] || 'Not Started';
+                  const isStruggling = status === 'Needs Review';
+                  const isDoingWell = status === 'Doing Well';
+                  
+                  return (
+                    <div key={topicName} className={`border p-5 rounded-2xl flex items-start justify-between ${isStruggling ? 'bg-orange-500/10 border-orange-500/20' : isDoingWell ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-white/5 border-white/10'}`}>
+                      <div>
+                        <h4 className="font-semibold text-white capitalize mb-1">{topicName.replace('_', ' ')}</h4>
+                        <p className={`text-xs font-medium ${isStruggling ? 'text-orange-400' : isDoingWell ? 'text-emerald-400' : 'text-gray-400'}`}>
+                          {status}
+                        </p>
+                      </div>
+                      {status !== 'Not Started' && (
+                        <div className={`p-2 rounded-lg ${isStruggling ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                          {isStruggling ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 
