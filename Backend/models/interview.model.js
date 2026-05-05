@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const interviewSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   topic: String,
 
   difficulty: String,
@@ -13,8 +18,6 @@ const interviewSchema = new mongoose.Schema({
   answer: String,
 
   feedback: String,
-
-  score: Number
 
 }, {
   timestamps: true

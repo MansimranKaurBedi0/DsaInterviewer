@@ -1,75 +1,42 @@
-import React, { useState } from 'react';
-import InterviewHeader from './components/InterviewHeader';
-import CandidateStatsSidebar from './components/CandidateStatsSidebar';
-import InterviewChatScreen from './components/InterviewChatScreen';
-import axios from 'axios';
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import Interview from './components/Interview';
+
+import Home from './components/Home';
+
+// Basic Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 function App() {
-  const [isTyping, setIsTyping] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'ai',
-      type: 'text',
-      content: 'Welcome to your DSA Interview. I am your AI interviewer today. Are you ready to begin? We will be focusing on Arrays and Hashing.'
-    }
-  ]);
-  
-  const [stats, setStats] = useState({
-    score: 0,
-    accuracy: 100,
-    questionsAnswered: 0,
-    totalQuestions: 5,
-    topics: [
-      { name: 'Arrays & Hashing', completed: false },
-      { name: 'Two Pointers', completed: false },
-      { name: 'Sliding Window', completed: false },
-      { name: 'Trees', completed: false }
-    ]
-  });
-
-  const handleSendMessage = async (text) => {
-    // Add user message
-    const newMessages = [...messages, { role: 'user', type: 'text', content: text }];
-    setMessages(newMessages);
-    setIsTyping(true);
-
-    try {
-      const response = await axios.post('http://localhost:5001/api/chat', { message: text });
-      
-      const replyMessage = response.data.reply;
-      setMessages(prev => [...prev, { role: 'ai', type: 'text', content: replyMessage }]);
-      
-      if (response.data.score) {
-        setStats(prev => ({ 
-          ...prev, 
-          score: response.data.totalScore,
-          questionsAnswered: prev.questionsAnswered + 1 
-        }));
-      }
-
-      setIsTyping(false);
-
-    } catch (error) {
-      console.error('Error communicating with backend:', error);
-      setMessages(prev => [...prev, { role: 'ai', type: 'text', content: 'Sorry, I encountered an error. Please try again.' }]);
-      setIsTyping(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col p-4 max-w-7xl mx-auto">
-      <InterviewHeader />
-      
-      <main className="flex-1 flex flex-col lg:flex-row gap-6 px-4 pb-6">
-        <InterviewChatScreen 
-          messages={messages} 
-          isTyping={isTyping} 
-          onSendMessage={handleSendMessage} 
-        />
-        
-        <CandidateStatsSidebar stats={stats} />
-      </main>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/interview" 
+        element={
+          <ProtectedRoute>
+            <Interview />
+          </ProtectedRoute>
+        } 
+      />
+    </Routes>
   );
 }
 

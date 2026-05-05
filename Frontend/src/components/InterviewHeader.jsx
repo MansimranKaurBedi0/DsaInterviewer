@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { BrainCircuit, Clock, ShieldCheck } from 'lucide-react';
 
-const InterviewHeader = () => {
+const InterviewHeader = ({ onEnd }) => {
   return (
     <header className="glass-panel sticky top-0 z-10 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between rounded-b-2xl mb-6 mx-4 mt-2 gap-4 sm:gap-0">
       <div className="flex items-center gap-3">
@@ -9,9 +10,9 @@ const InterviewHeader = () => {
           <BrainCircuit className="w-6 h-6 text-indigo-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">
+          <Link to="/" className="text-xl font-bold bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
             AI DSA Interviewer
-          </h1>
+          </Link>
           <p className="text-xs text-indigo-300/70 font-medium tracking-wider uppercase">Senior Software Engineer Role</p>
         </div>
       </div>
@@ -31,6 +32,24 @@ const InterviewHeader = () => {
           <Clock className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-medium text-indigo-200 font-mono">45:00</span>
         </div>
+
+        <button 
+          onClick={onEnd}
+          className="bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-500/30 px-4 py-2 rounded-full text-sm font-medium transition-colors"
+        >
+          End Interview
+        </button>
+
+        <button 
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }}
+          className="bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 border border-gray-500/30 px-4 py-2 rounded-full text-sm font-medium transition-colors"
+        >
+          Logout
+        </button>
       </div>
     </header>
   );

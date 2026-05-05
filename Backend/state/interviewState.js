@@ -3,7 +3,6 @@ const interviewState = {
   topic: null,
   difficulty: null,
   currentQuestion: null,
-  score: 0,
   totalQuestions: 0,
   awaitingAnswer: false
   ,history: []

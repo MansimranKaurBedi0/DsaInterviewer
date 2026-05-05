@@ -6,12 +6,16 @@ import generateQuestion from "./tools/generateQuestion.js";
 import interviewState from "./state/interviewState.js";
 import Interview from "./models/interview.model.js";
 import connectDB from "./config/db.js";
+import authRoutes from "./routes/auth.routes.js";
+import { requireAuth } from "./middleware/auth.middleware.js";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/auth', authRoutes);
 
 const questionDeclaration = {
   name: "generateQuestion",
@@ -66,7 +70,7 @@ async function init() {
 
 init();
 
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', requireAuth, async (req, res) => {
   try {
     const userMessage = req.body.message;
 
@@ -78,17 +82,12 @@ app.post('/api/chat', async (req, res) => {
       Candidate Answer:
       ${userMessage}
 
-      Evaluate like a DSA interviewer.
+      Evaluate like a STRICT DSA interviewer.
+      If the candidate says "I don't know", gives an empty answer, or provides an answer completely unrelated to solving the problem, point it out.
 
-      First line should be:
-      SCORE: X
-
-      (where X is between 1 to 10)
-
-      Then give feedback and one follow-up question.
+      Give feedback. Also ask if they are ready for the next question or give a follow-up.
 `
       });
-      const match = evaluation.text.match(/SCORE:\s*(\d+)(?:\/10)?/i);
 
       interviewState.history.push({
         question: interviewState.currentQuestion,
@@ -98,26 +97,18 @@ app.post('/api/chat', async (req, res) => {
       });
 
       await Interview.create({
+        userId: req.user.userId,
         topic: interviewState.topic,
         difficulty: interviewState.difficulty,
         question: interviewState.currentQuestion,
         answer: userMessage,
-        feedback: evaluation.text,
-        score: match ? Number(match[1]) : 0
+        feedback: evaluation.text
       });
-
-      let scoreDelta = 0;
-      if (match) {
-        scoreDelta = Number(match[1]);
-        interviewState.score += scoreDelta;
-      }
 
       interviewState.awaitingAnswer = false;
 
       return res.json({
         reply: evaluation.text,
-        score: scoreDelta,
-        totalScore: interviewState.score,
         isQuestion: false
       });
     }
@@ -133,7 +124,7 @@ app.post('/api/chat', async (req, res) => {
         const result = generateQuestion(toolCall.args);
         const questionText = result.problem ? `**${result.title}**\n${result.problem}` : result;
         return res.json({
-          reply: `**Interview Question:**\n\n${questionText}\n\n*Explain your approach to solve this problem.*`,
+          reply: `**Interview Question ${interviewState.totalQuestions}:**\n\n${questionText}\n\n*Explain your approach to solve this problem.*`,
           isQuestion: true
         });
       }
@@ -147,5 +138,35 @@ app.post('/api/chat', async (req, res) => {
   } catch (error) {
     console.error("API Error:", error);
     res.status(500).json({ error: "An error occurred while processing your request." });
+  }
+});
+
+app.get('/api/interviews/history', requireAuth, async (req, res) => {
+  try {
+    const interviews = await Interview.find({ userId: req.user.userId }).sort({ createdAt: -1 });
+    
+    // Simple analysis for recommendations
+    const topicsMap = {};
+    interviews.forEach(i => {
+      if (!topicsMap[i.topic]) topicsMap[i.topic] = { count: 0, badAnswers: 0 };
+      topicsMap[i.topic].count++;
+      
+      // If feedback says 0 score or points out they don't know, mark as bad
+      if (i.feedback.includes("SCORE: 0") || i.feedback.toLowerCase().includes("don't know") || i.feedback.toLowerCase().includes("completely unrelated")) {
+        topicsMap[i.topic].badAnswers++;
+      }
+    });
+
+    const recommendations = [];
+    for (const [topic, stats] of Object.entries(topicsMap)) {
+      if (stats.badAnswers > 0) {
+        recommendations.push(topic);
+      }
+    }
+
+    res.json({ interviews, recommendations });
+  } catch (error) {
+    console.error("History Error:", error);
+    res.status(500).json({ error: "An error occurred fetching history." });
   }
 });
