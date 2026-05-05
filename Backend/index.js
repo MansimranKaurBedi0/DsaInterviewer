@@ -131,8 +131,9 @@ app.post('/api/chat', async (req, res) => {
 
       if (toolCall.name === "generateQuestion") {
         const result = generateQuestion(toolCall.args);
+        const questionText = result.problem ? `**${result.title}**\n${result.problem}` : result;
         return res.json({
-          reply: `**Interview Question:**\n\n${result}\n\n*Explain your approach to solve this problem.*`,
+          reply: `**Interview Question:**\n\n${questionText}\n\n*Explain your approach to solve this problem.*`,
           isQuestion: true
         });
       }
